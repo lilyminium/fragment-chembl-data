@@ -5,7 +5,6 @@ import typing
 from collections import defaultdict
 
 import click
-from click_option_group import optgroup
 
 from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors, Recap
@@ -32,8 +31,10 @@ def fragment_single(parent_smiles: str):
         return set()
 
     allowed_elements = {"Br", "C", "Cl", "F", "H", "I", "N", "O", "P", "S"}
-
-    offmol = Molecule.from_smiles(parent_smiles, allow_undefined_stereo=True)
+    try:
+        offmol = Molecule.from_smiles(parent_smiles, allow_undefined_stereo=True)
+    except:
+        return set()
     rd_parent = offmol.to_rdkit()
 
     if any(
@@ -54,6 +55,9 @@ def fragment_single(parent_smiles: str):
         fragmented = Chem.FragmentOnBonds(rd_parent, rdbonds)
     else:
         fragmented = rd_parent
+
+    for rdatom in fragmented.GetAtoms():
+        rdatom.SetIsotope(0)
 
     return set(Chem.MolToSmiles(fragmented).split("."))
 

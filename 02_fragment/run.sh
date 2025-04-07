@@ -9,6 +9,10 @@
 #SBATCH --constraint=fastscratch
 #SBATCH --output slurm-%x.%A.out
 
+source ~/.bashrc
+
+conda activate yammbs
+
 
 python fragment-on-rotatable-bonds.py               \
     -np 16   \
