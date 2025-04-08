@@ -11,32 +11,26 @@ import tqdm
 
 from rdkit import Chem
 
-def combine_fragment(fragment_smiles: tuple[str, str]) -> str:
+def combine_fragment(fragment_smiles: tuple[str, str], reaction) -> str:
     """
     Combine two fragments with a single bond.
     """
-    # Create an editable molecule from the two fragments
-    #fragment_1 = Chem.MolFromSmiles(fragment_smiles[0])
-    #fragment_2 = Chem.MolFromSmiles(fragment_smiles[1])
-    #rwmol = Chem.RWMol(
-    #    Chem.CombineMols(fragment_1, fragment_2)
-    #)
-    rwmol = Chem.RWMol(Chem.MolFromSmiles(".".join(fragment_smiles)))
-    dummy_indices = [
-        atom.GetIdx() for atom in rwmol.GetAtoms() if atom.GetAtomicNum() == 0
-    ]
-    if len(dummy_indices) != 2:
-        raise ValueError("Expected exactly two dummy atoms to combine.")
-    # Create a bond between the two dummy atoms
-    rwmol.AddBond(dummy_indices[0], dummy_indices[1], Chem.BondType.SINGLE)
+
+    reactants = (
+        Chem.MolFromSmiles(fragment_smiles[0]),
+        Chem.MolFromSmiles(fragment_smiles[1]),
+    )
     
-    # Sanitize the molecule
-    #Chem.SanitizeMol(rwmol)
-    return Chem.MolToSmiles(rwmol)
+    products = [
+        group[0]
+        for group in reaction.RunReactants(reactants)
+    ]
+    return set([Chem.MolToSmiles(product) for product in products])
 
 def combine_fragments_batch(
     index: int,
-    fragment_smiles: list[str],
+    fragment_smiles: list[str] = None,
+    reaction = None
 ) -> set[str]:
     
     """
@@ -46,7 +40,7 @@ def combine_fragments_batch(
     fragment1 = fragment_smiles[index]
     other_fragments = fragment_smiles[index:]
     for fragment2 in other_fragments:
-        combined.add(combine_fragment((fragment1, fragment2)))
+        combined|= combine_fragment((fragment1, fragment2), reaction)
     return combined
 
 
@@ -103,15 +97,12 @@ def main(
     print(f"Filtered to {len(small_fragment_smiles)} smiles with {n_heavy_atoms} heavy atoms")
 
     all_combined_smiles = set()
+    reaction = Chem.rdChemReactions.ReactionFromSmarts("[*:1]-[#0:2].[*:3]-[#0:4]>>[*:1]-[*:3]")
     combiner = functools.partial(
         combine_fragments_batch,
         fragment_smiles=small_fragment_smiles,
+        reaction=reaction
     )
-    # combinations = itertools.combinations_with_replacement(
-    #     small_fragment_smiles, 2
-    # )
-
-    # Fragment the molecules with multiprocessing and tqdm
     with multiprocessing.Pool(processes=n_processes) as pool:
         all_sets = list(
             tqdm.tqdm(
