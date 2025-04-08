@@ -33,9 +33,10 @@ def fragment_single(parent_smiles: str):
     allowed_elements = {"Br", "C", "Cl", "F", "H", "I", "N", "O", "P", "S"}
     try:
         offmol = Molecule.from_smiles(parent_smiles, allow_undefined_stereo=True)
+        rd_parent = offmol.to_rdkit()
     except:
         return set()
-    rd_parent = offmol.to_rdkit()
+
 
     if any(
         rd_atom.GetNumRadicalElectrons() != 0
