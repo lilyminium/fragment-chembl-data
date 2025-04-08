@@ -15,11 +15,12 @@ def combine_fragment(fragment_smiles: tuple[str, str]) -> str:
     Combine two fragments with a single bond.
     """
     # Create an editable molecule from the two fragments
-    fragment_1 = Chem.MolFromSmiles(fragment_smiles[0])
-    fragment_2 = Chem.MolFromSmiles(fragment_smiles[1])
-    rwmol = Chem.RWMol(
-        Chem.CombineMols(fragment_1, fragment_2)
-    )
+    #fragment_1 = Chem.MolFromSmiles(fragment_smiles[0])
+    #fragment_2 = Chem.MolFromSmiles(fragment_smiles[1])
+    #rwmol = Chem.RWMol(
+    #    Chem.CombineMols(fragment_1, fragment_2)
+    #)
+    rwmol = Chem.RWMol(Chem.MolFromSmiles(".".join(fragment_smiles)))
     dummy_indices = [
         atom.GetIdx() for atom in rwmol.GetAtoms() if atom.GetAtomicNum() == 0
     ]
@@ -29,7 +30,7 @@ def combine_fragment(fragment_smiles: tuple[str, str]) -> str:
     rwmol.AddBond(dummy_indices[0], dummy_indices[1], Chem.BondType.SINGLE)
     
     # Sanitize the molecule
-    Chem.SanitizeMol(rwmol)
+    #Chem.SanitizeMol(rwmol)
     return Chem.MolToSmiles(rwmol)
 
 
@@ -63,6 +64,7 @@ def main(
     input_paths,
     output_file,
     n_processes: int = 4,
+    n_heavy_atoms: int = 20,
 ):
     # Load in the molecules to fragment
     all_fragment_smiles = set()
@@ -74,10 +76,17 @@ def main(
 
     all_fragment_smiles = sorted(all_fragment_smiles, key=len, reverse=True)
     print(f"Found {len(all_fragment_smiles)} fragment molecules")
+    small_fragment_smiles = set()
+    for smi in tqdm.tqdm(all_fragment_smiles):
+        rdmol = Chem.MolFromSmiles(smi)
+        if rdmol.GetNumHeavyAtoms() <= n_heavy_atoms:
+            small_fragment_smiles.add(smi)
+
+    print(f"Filtered to {len(small_fragment_smiles)} smiles with {n_heavy_atoms} heavy atoms")
 
     all_combined_smiles = set()
     combinations = itertools.combinations_with_replacement(
-        all_fragment_smiles, 2
+        small_fragment_smiles, 2
     )
 
     # Fragment the molecules with multiprocessing and tqdm
