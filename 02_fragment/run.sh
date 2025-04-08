@@ -3,7 +3,7 @@
 #SBATCH -p standard
 #SBATCH -t 1-00:00:00
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=64
 #SBATCH --mem=32GB
 #SBATCH --account dmobley_lab
 #SBATCH --export ALL
@@ -28,4 +28,4 @@ conda activate yammbs
 python combine-single-fragments.py                 \
     -i fragments/chembl-35-fragments-single.smi     \
     -o output/chembl-35-fragments-combined.smi    \
-    -np 32
+    -np 64
