@@ -1,6 +1,7 @@
 """
 Combine single fragments with a single bond.
 """
+import functools
 import itertools
 import pathlib
 import multiprocessing
@@ -32,6 +33,21 @@ def combine_fragment(fragment_smiles: tuple[str, str]) -> str:
     # Sanitize the molecule
     #Chem.SanitizeMol(rwmol)
     return Chem.MolToSmiles(rwmol)
+
+def combine_fragments_batch(
+    index: int,
+    fragment_smiles: list[str],
+) -> set[str]:
+    
+    """
+    Combine a single fragment with a list of other fragments.
+    """
+    combined = set()
+    fragment1 = fragment_smiles[index]
+    other_fragments = fragment_smiles[index:]
+    for fragment2 in other_fragments:
+        combined.add(combine_fragment((fragment1, fragment2)))
+    return combined
 
 
 @click.command()
@@ -82,18 +98,24 @@ def main(
         if rdmol.GetNumHeavyAtoms() <= n_heavy_atoms:
             small_fragment_smiles.add(smi)
 
+    small_fragment_smiles = sorted(small_fragment_smiles, key=len, reverse=True)
+
     print(f"Filtered to {len(small_fragment_smiles)} smiles with {n_heavy_atoms} heavy atoms")
 
     all_combined_smiles = set()
-    combinations = itertools.combinations_with_replacement(
-        small_fragment_smiles, 2
+    combiner = functools.partial(
+        combine_fragments_batch,
+        fragment_smiles=small_fragment_smiles,
     )
+    # combinations = itertools.combinations_with_replacement(
+    #     small_fragment_smiles, 2
+    # )
 
     # Fragment the molecules with multiprocessing and tqdm
     with multiprocessing.Pool(processes=n_processes) as pool:
         all_sets = list(
             tqdm.tqdm(
-                pool.imap(combine_fragment, combinations),
+                pool.imap(combiner, range(len(small_fragment_smiles))),
                 desc="Combining",
             )
         )
