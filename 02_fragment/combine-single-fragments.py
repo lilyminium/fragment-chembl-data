@@ -10,6 +10,7 @@ import click
 import tqdm
 
 from rdkit import Chem
+from rdkit.Chem import rdChemReactions
 
 def combine_fragment(fragment_smiles: tuple[str, str], reaction) -> str:
     """
@@ -92,12 +93,12 @@ def main(
         if rdmol.GetNumHeavyAtoms() <= n_heavy_atoms:
             small_fragment_smiles.add(smi)
 
-    small_fragment_smiles = sorted(small_fragment_smiles, key=len, reverse=True)[:10]
+    small_fragment_smiles = sorted(small_fragment_smiles, key=len, reverse=True)
 
     print(f"Filtered to {len(small_fragment_smiles)} smiles with {n_heavy_atoms} heavy atoms")
 
     all_combined_smiles = set()
-    reaction = Chem.rdChemReactions.ReactionFromSmarts("[*:1]-[#0:2].[*:3]-[#0:4]>>[*:1]-[*:3]")
+    reaction = rdChemReactions.ReactionFromSmarts("[*:1]-[#0].[*:3]-[#0]>>[*:1]-[*:3]")
     combiner = functools.partial(
         combine_fragments_batch,
         fragment_smiles=small_fragment_smiles,
