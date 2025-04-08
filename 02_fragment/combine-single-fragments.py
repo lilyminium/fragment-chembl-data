@@ -28,10 +28,12 @@ from rdkit.Chem import rdChemReactions
 #     ]
 #     return set([Chem.MolToSmiles(product) for product in products])
 
-def combine_fragment(reactants, reaction) -> str:
+def combine_fragment(fragment1, fragment2_smiles, reaction) -> str:
     """
     Combine two fragments with a single bond.
     """
+    fragment2 = Chem.MolFromSmiles(fragment2_smiles)
+    reactants = (fragment1, fragment2)
     
     products = [
         group[0]
@@ -58,11 +60,11 @@ def combine_fragments_batch(
     # other_fragments = fragments[index:]
 
     fragment1 = Chem.MolFromSmiles(fragment_smiles[index])
-    other_fragments = [
-        Chem.MolFromSmiles(x) for x in fragment_smiles[index:]
-    ]
-    for fragment2 in other_fragments:
-        combined|= combine_fragment((fragment1, fragment2), reaction)
+    #other_fragments = [
+    #    Chem.MolFromSmiles(x) for x in fragment_smiles[index:]
+    #]
+    for fragment2_smiles in fragment_smiles[index:]: # other_fragments:
+        combined|= combine_fragment(fragment1, fragment2_smiles, reaction)
     return combined
 
 
@@ -96,7 +98,7 @@ def main(
     input_paths,
     output_file,
     n_processes: int = 4,
-    n_heavy_atoms: int = 20,
+    n_heavy_atoms: int = 15,
 ):
     # Load in the molecules to fragment
     all_fragment_smiles = set()
@@ -131,14 +133,16 @@ def main(
         reaction=reaction
     )
     with multiprocessing.Pool(processes=n_processes) as pool:
-        all_sets = list(
-            tqdm.tqdm(
+        #all_sets = list(
+        for fragment_set in tqdm.tqdm(
                 pool.imap(combiner, range(len(small_fragment_smiles))),
                 desc="Combining",
-            )
-        )
-        for fragment_set in all_sets:
+                total=len(small_fragment_smiles)
+                ):
             all_combined_smiles |= fragment_set
+        #)
+        #for fragment_set in all_sets:
+        #    all_combined_smiles |= fragment_set
 
 
     all_combined_smiles = sorted(all_combined_smiles, key=len, reverse=True)
