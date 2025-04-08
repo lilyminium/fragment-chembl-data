@@ -12,15 +12,26 @@ import tqdm
 from rdkit import Chem
 from rdkit.Chem import rdChemReactions
 
-def combine_fragment(fragment_smiles: tuple[str, str], reaction) -> str:
+# def combine_fragment(fragment_smiles: tuple[str, str], reaction) -> str:
+#     """
+#     Combine two fragments with a single bond.
+#     """
+
+#     reactants = (
+#         Chem.MolFromSmiles(fragment_smiles[0]),
+#         Chem.MolFromSmiles(fragment_smiles[1]),
+#     )
+    
+#     products = [
+#         group[0]
+#         for group in reaction.RunReactants(reactants)
+#     ]
+#     return set([Chem.MolToSmiles(product) for product in products])
+
+def combine_fragment(reactants, reaction) -> str:
     """
     Combine two fragments with a single bond.
     """
-
-    reactants = (
-        Chem.MolFromSmiles(fragment_smiles[0]),
-        Chem.MolFromSmiles(fragment_smiles[1]),
-    )
     
     products = [
         group[0]
@@ -28,9 +39,11 @@ def combine_fragment(fragment_smiles: tuple[str, str], reaction) -> str:
     ]
     return set([Chem.MolToSmiles(product) for product in products])
 
+
 def combine_fragments_batch(
     index: int,
-    fragment_smiles: list[str] = None,
+    # fragment_smiles: list[str] = None,
+    fragments: list[Chem.Mol] = None,
     reaction = None
 ) -> set[str]:
     
@@ -38,8 +51,10 @@ def combine_fragments_batch(
     Combine a single fragment with a list of other fragments.
     """
     combined = set()
-    fragment1 = fragment_smiles[index]
-    other_fragments = fragment_smiles[index:]
+    # fragment1 = fragment_smiles[index]
+    # other_fragments = fragment_smiles[index:]
+    fragment1 = fragments[index]
+    other_fragments = fragments[index:]
     for fragment2 in other_fragments:
         combined|= combine_fragment((fragment1, fragment2), reaction)
     return combined
@@ -99,9 +114,14 @@ def main(
 
     all_combined_smiles = set()
     reaction = rdChemReactions.ReactionFromSmarts("[*:1]-[#0].[*:3]-[#0]>>[*:1]-[*:3]")
+    fragments = [
+        Chem.MolFromSmiles(x)
+        for x in tqdm.tqdm(small_fragment_smiles)
+    ]
     combiner = functools.partial(
         combine_fragments_batch,
-        fragment_smiles=small_fragment_smiles,
+        # fragment_smiles=small_fragment_smiles,
+        fragments=fragments,
         reaction=reaction
     )
     with multiprocessing.Pool(processes=n_processes) as pool:
