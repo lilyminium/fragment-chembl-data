@@ -24,7 +24,7 @@ def fragment_single(parent_smiles: str):
 
     # get dummy atoms
     dummy_indices = [
-        atom.GetIdx() for atom in rdmol.GetAtoms() if atom.GetAtomicNum() == "0"
+        atom.GetIdx() for atom in rdmol.GetAtoms() if atom.GetAtomicNum() == 0
     ]
     output_smiles = set()
     for idx in dummy_indices:

@@ -89,16 +89,16 @@ def main(
             )
         )
         for fragment_set in all_sets:
-            all_fragment_smiles |= fragment_set
+            all_combined_smiles |= fragment_set
 
 
-    all_fragment_smiles = sorted(all_fragment_smiles, key=len, reverse=True)
-    print(f"Found {len(all_fragment_smiles)} fragments")
+    all_combined_smiles = sorted(all_combined_smiles, key=len, reverse=True)
+    print(f"Found {len(all_combined_smiles)} fragments")
 
     output_file = pathlib.Path(output_file)
     output_file.parent.mkdir(parents=True, exist_ok=True)
     with open(output_file, "w") as file:
-        file.write("\n".join(all_fragment_smiles))
+        file.write("\n".join(all_combined_smiles))
     print(f"Fragments written to {output_file}")
 
 
