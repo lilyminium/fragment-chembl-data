@@ -42,8 +42,8 @@ def combine_fragment(reactants, reaction) -> str:
 
 def combine_fragments_batch(
     index: int,
-    # fragment_smiles: list[str] = None,
-    fragments: list[Chem.Mol] = None,
+    fragment_smiles: list[str] = None,
+    # fragments: list[Chem.Mol] = None,
     reaction = None
 ) -> set[str]:
     
@@ -53,8 +53,14 @@ def combine_fragments_batch(
     combined = set()
     # fragment1 = fragment_smiles[index]
     # other_fragments = fragment_smiles[index:]
-    fragment1 = fragments[index]
-    other_fragments = fragments[index:]
+    
+    # fragment1 = fragments[index]
+    # other_fragments = fragments[index:]
+
+    fragment1 = Chem.MolFromSmiles(fragment_smiles[index])
+    other_fragments = [
+        Chem.MolFromSmiles(x) for x in fragment_smiles[index:]
+    ]
     for fragment2 in other_fragments:
         combined|= combine_fragment((fragment1, fragment2), reaction)
     return combined
@@ -114,14 +120,14 @@ def main(
 
     all_combined_smiles = set()
     reaction = rdChemReactions.ReactionFromSmarts("[*:1]-[#0].[*:3]-[#0]>>[*:1]-[*:3]")
-    fragments = [
-        Chem.MolFromSmiles(x)
-        for x in tqdm.tqdm(small_fragment_smiles)
-    ]
+    # fragments = [
+    #     Chem.MolFromSmiles(x)
+    #     for x in tqdm.tqdm(small_fragment_smiles)
+    # ]
     combiner = functools.partial(
         combine_fragments_batch,
-        # fragment_smiles=small_fragment_smiles,
-        fragments=fragments,
+        fragment_smiles=small_fragment_smiles,
+        # fragments=fragments,
         reaction=reaction
     )
     with multiprocessing.Pool(processes=n_processes) as pool:
