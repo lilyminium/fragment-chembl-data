@@ -98,7 +98,7 @@ def main(
         if rdmol.GetNumHeavyAtoms() <= n_heavy_atoms:
             small_fragment_smiles.add(smi)
 
-    small_fragment_smiles = sorted(small_fragment_smiles, key=len, reverse=True)
+    small_fragment_smiles = sorted(small_fragment_smiles, key=len, reverse=True)[:10]
 
     print(f"Filtered to {len(small_fragment_smiles)} smiles with {n_heavy_atoms} heavy atoms")
 
