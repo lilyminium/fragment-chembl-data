@@ -15,7 +15,19 @@ conda activate openff-nagl-test
 
 export OE_LICENSE="/data/homezvol3/lilyw7/oe_license.txt"
 
-python assign-torsions-and-profile.py                           \
+# python assign-torsions-and-profile.py                           \
+#         --n-workers                     300                     \
+#         --worker-type                   "slurm"                 \
+#         --batch-size                    5                       \
+#         --memory                        4                       \
+#         --walltime                      480                     \
+#         --queue                         "free"                  \
+#         --conda-environment             "openff-nagl-test"      \
+#     -i        "../02_fragment/test.smi"                         \
+#     -o        "ff-parameters"
+
+
+python assign-parameters-by-file.py                             \
         --n-workers                     300                     \
         --worker-type                   "slurm"                 \
         --batch-size                    5                       \
@@ -23,6 +35,6 @@ python assign-torsions-and-profile.py                           \
         --walltime                      480                     \
         --queue                         "free"                  \
         --conda-environment             "openff-nagl-test"      \
-    -i        "../02_fragment/test.smi"                         \
+    -i        "../02_fragment/intermediate"                     \
     -o        "ff-parameters"
 
