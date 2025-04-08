@@ -1,0 +1,16 @@
+name: fragment-env
+channels:
+  - conda-forge
+  - openeye
+
+dependencies:
+  - openff-toolkit
+  - openeye-toolkits
+
+  - pyarrow
+  - seaborn
+  - MDAnalysis
+  - tqdm
+  - click
+  - click-option-group
+  
