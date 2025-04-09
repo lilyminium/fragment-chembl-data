@@ -115,43 +115,68 @@ def select_by_parameter_diversity(
     default="selected-torsion-molecules.smi",
     help="Output SMILES file.",
 )
+@click.option(
+    "--torsion-id",
+    "-t",
+    default="t126",
+    help="Torsion ID to select.",
+)
 def main(
     input_directory="../03_profile/ff-parameters",
     csv_file="all-matching-low-torsions.csv",
     smiles_file="selected-torsion-molecules.smi",
+    torsion_id: str = "t126",
+    n_pool: int = 100,
+    n_parameter_pool: int = 30,
+    n_output_parameters: int = 10,
 ):
     dataset = ds.dataset(input_directory)
+    expression = pc.field("parameter_id") == torsion_id
+    torsion_subset = dataset.filter(expression)
+    smiles = set(
+        torsion_subset.to_table(columns=["smiles"]).to_pydict()["smiles"]
+    )
+    if "" in smiles:
+        smiles.remove("")
+
+    # initial sort for length and take first 5000
+    smiles = sorted(smiles, key=len)[:5000]
+    
+    expression2 = pc.field("smiles").isin(smiles)
+    subset2 = torsion_subset.filter(expression2)
+    df = subset2.to_table(columns=["parameter_id", "smiles"]).to_pandas()
+    logger.info(f"Loaded {len(df)} rows from dataset")
 
     # <= 10 torsions in central bonds across all QCArchive
-    TORSION_IDS = [
-        't126', 't128', 't8', 't114', 't112', 't164', 't18b', 't81', 't141b',
-        't138a', 't141a', 't113', 't167', 't137', 't7', 't87a', 't136', 't102',
-        't33', 't141', 't89', 't103', 't31a', 't165', 't141c', 't55', 't54',
-        't73', 't49', 't42a', 't101', 't88', 't158', 't12', 't154', 't129',
-        't30'
-    ]
-    logger.info(f"Filtering dataset for {len(TORSION_IDS)} torsion IDs")
+    # TORSION_IDS = [
+    #     't126', 't128', 't8', 't114', 't112', 't164', 't18b', 't81', 't141b',
+    #     't138a', 't141a', 't113', 't167', 't137', 't7', 't87a', 't136', 't102',
+    #     't33', 't141', 't89', 't103', 't31a', 't165', 't141c', 't55', 't54',
+    #     't73', 't49', 't42a', 't101', 't88', 't158', 't12', 't154', 't129',
+    #     't30'
+    # ]
+    # logger.info(f"Filtering dataset for {len(TORSION_IDS)} torsion IDs")
 
-    dfs = []
-    for torsion_id in tqdm.tqdm(TORSION_IDS):
-        expression = pc.field("parameter_id") == torsion_id
-        torsion_subset = dataset.filter(expression)
-        smiles = torsion_subset.to_table(columns=["smiles"]).to_pydict()["smiles"]
-        # initial sort for length and take first 5000
-        smiles = sorted(smiles, key=len)[:5000]
+    # dfs = []
+    # for torsion_id in tqdm.tqdm(TORSION_IDS):
+    #     expression = pc.field("parameter_id") == torsion_id
+    #     torsion_subset = dataset.filter(expression)
+    #     smiles = torsion_subset.to_table(columns=["smiles"]).to_pydict()["smiles"]
+    #     # initial sort for length and take first 5000
+    #     smiles = sorted(smiles, key=len)[:5000]
         
-        expression2 = pc.field("smiles").isin(smiles)
-        subset2 = torsion_subset.filter(expression2)
-        dfs.append(
-            subset2.to_table(columns=["parameter_id", "smiles"]).to_pandas()
-        )
-    df = pd.concat(dfs)
+    #     expression2 = pc.field("smiles").isin(smiles)
+    #     subset2 = torsion_subset.filter(expression2)
+    #     dfs.append(
+    #         subset2.to_table(columns=["parameter_id", "smiles"]).to_pandas()
+    #     )
+    # df = pd.concat(dfs)
 
     #expression = pc.field("parameter_id").isin(TORSION_IDS)
     #subset = dataset.filter(expression)
 
     #df = subset.to_table().to_pandas()
-    logger.info(f"Loaded {len(df)} rows from dataset")
+    # logger.info(f"Loaded {len(df)} rows from dataset")
 
     # add mw
     mws = []
@@ -171,31 +196,29 @@ def main(
     df.to_csv(csv_file)
     logger.info(f"Raw dataset saved to {csv_file}")
 
-    n_pool = 100
-    n_parameter_pool = 30
-    n_output_parameters = 10
+    
+    # sort by mw and take first 100
+    df = df.sort_values("mw").head(n_pool)
+    logger.info(f"Filtered dataset to {len(df)} rows")
 
-    output_smiles = []
+    # select by chemical diversity
+    parameter_smiles = select_by_chemical_diversity(
+        df["smiles"].values,
+        n_parameter_pool=n_parameter_pool,
+    )
+    logger.info(f"Selected {len(parameter_smiles)} SMILES by chemical diversity")
 
-    for parameter_id, subdf in tqdm.tqdm(df.groupby("parameter_id")):
-        # sort by mw and take first 100
-        subdf = subdf.sort_values("mw").head(n_pool)
-        # select by chemical diversity
-        parameter_smiles = select_by_chemical_diversity(
-            subdf["smiles"].values,
-            n_parameter_pool=n_parameter_pool,
-        )
-
-        # now sort by parameter diversity
-        parameter_smiles = select_by_parameter_diversity(
-            parameter_smiles,
-            parameter_id=parameter_id,
-            n_parameters=n_output_parameters,
-        )
-        output_smiles.extend([
-            f"{smi} {parameter_id}"
-            for smi in parameter_smiles
-        ])
+    # now sort by parameter diversity
+    parameter_smiles = select_by_parameter_diversity(
+        parameter_smiles,
+        parameter_id=torsion_id,
+        n_parameters=n_output_parameters,
+    )
+    logger.info(f"Selected {len(parameter_smiles)} SMILES by parameter diversity")
+    output_smiles = [
+        f"{smi} {torsion_id}"
+        for smi in parameter_smiles
+    ]
 
     with open(smiles_file, "w") as f:
         f.write("\n".join(output_smiles))
