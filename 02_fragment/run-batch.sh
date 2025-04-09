@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=24gb
+#SBATCH --mem=128gb
 #SBATCH --account dmobley_lab
 #SBATCH --output slurm-%x.%A.out
 
@@ -16,10 +16,10 @@ conda activate openff-nagl-test
 export OE_LICENSE="/data/homezvol3/lilyw7/oe_license.txt"
 
 python batch-combine-fragments-intermediate.py                  \
-        --n-workers                     300                     \
+        --n-workers                     100                     \
         --worker-type                   "slurm"                 \
-        --batch-size                    5                       \
-        --memory                        4                       \
+        --batch-size                    1                       \
+        --memory                        32                      \
         --walltime                      480                     \
         --queue                         "free"                  \
         --conda-environment             "openff-nagl-test"      \
