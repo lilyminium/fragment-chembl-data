@@ -1,0 +1,3 @@
+2025-04-09 06:03:03,855 - __main__ - INFO - Filtering dataset for 37 torsion IDs
+/export/spool/slurm/slurmd.spool/job37406439/slurm_script: line 18: 1875805 Killed                  python select-mols-with-low-torsions.py
+slurmstepd: error: Detected 1 oom_kill event in StepId=37406439.batch. Some of the step tasks have been OOM Killed.

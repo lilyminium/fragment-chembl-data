@@ -131,17 +131,33 @@ def main(
         't30'
     ]
     logger.info(f"Filtering dataset for {len(TORSION_IDS)} torsion IDs")
-    expression = pc.field("parameter_id").isin(TORSION_IDS)
-    subset = dataset.filter(expression)
 
-    df = subset.to_table().to_pandas()
+    dfs = []
+    for torsion_id in tqdm.tqdm(TORSION_IDS):
+        expression = pc.field("parameter_id") == torsion_id
+        torsion_subset = dataset.filter(expression)
+        smiles = torsion_subset.to_table(columns=["smiles"]).to_pydict()["smiles"]
+        # initial sort for length and take first 5000
+        smiles = sorted(smiles, key=len)[:5000]
+        
+        expression2 = pc.field("smiles").isin(smiles)
+        subset2 = torsion_subset.filter(expression2)
+        dfs.append(
+            subset2.to_table(columns=["parameter_id", "smiles"]).to_pandas()
+        )
+    df = pd.concat(dfs)
+
+    #expression = pc.field("parameter_id").isin(TORSION_IDS)
+    #subset = dataset.filter(expression)
+
+    #df = subset.to_table().to_pandas()
     logger.info(f"Loaded {len(df)} rows from dataset")
 
     # add mw
     mws = []
 
     # this is also a filter for validation
-    for smi in df.smiles.values:
+    for smi in tqdm.tqdm(df.smiles.values):
         try:
             mol = Molecule.from_smiles(smi)
         except:

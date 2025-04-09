@@ -15,4 +15,4 @@ conda activate openff-nagl-test
 
 export OE_LICENSE="/data/homezvol3/lilyw7/oe_license.txt"
 
-python select-mols-with-low-torsions.py
+python select-mols-with-low-torsions-small.py

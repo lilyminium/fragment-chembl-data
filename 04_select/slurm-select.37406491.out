@@ -1,0 +1,29 @@
+2025-04-09 06:40:27,517 - __main__ - INFO - Filtering dataset for 37 torsion IDs
+  0%|          | 0/37 [00:00<?, ?it/s]  3%|▎         | 1/37 [27:39<16:35:42, 1659.52s/it]  5%|▌         | 2/37 [53:20<15:27:18, 1589.66s/it]  8%|▊         | 3/37 [1:18:49<14:45:15, 1562.22s/it] 11%|█         | 4/37 [1:44:01<14:08:19, 1542.42s/it] 14%|█▎        | 5/37 [2:07:05<13:12:10, 1485.32s/it] 16%|█▌        | 6/37 [2:33:21<13:03:10, 1515.83s/it] 16%|█▌        | 6/37 [2:45:53<14:17:05, 1658.89s/it]
+Traceback (most recent call last):
+  File "/dfs6/pub/lilyw7/pydev/fragment-chembl-data/04_select/select-mols-with-low-torsions-small.py", line 207, in <module>
+    main()
+  File "/data/homezvol3/lilyw7/miniforge3/envs/openff-nagl-test/lib/python3.11/site-packages/click/core.py", line 1157, in __call__
+    return self.main(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/homezvol3/lilyw7/miniforge3/envs/openff-nagl-test/lib/python3.11/site-packages/click/core.py", line 1078, in main
+    rv = self.invoke(ctx)
+         ^^^^^^^^^^^^^^^^
+  File "/data/homezvol3/lilyw7/miniforge3/envs/openff-nagl-test/lib/python3.11/site-packages/click/core.py", line 1434, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/homezvol3/lilyw7/miniforge3/envs/openff-nagl-test/lib/python3.11/site-packages/click/core.py", line 783, in invoke
+    return __callback(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/dfs6/pub/lilyw7/pydev/fragment-chembl-data/04_select/select-mols-with-low-torsions-small.py", line 146, in main
+    subset2.to_table(columns=["parameter_id", "smiles"]).to_pandas()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "pyarrow/_dataset.pyx", line 547, in pyarrow._dataset.Dataset.to_table
+  File "pyarrow/_dataset.pyx", line 393, in pyarrow._dataset.Dataset.scanner
+  File "pyarrow/_dataset.pyx", line 3466, in pyarrow._dataset.Scanner.from_dataset
+  File "pyarrow/_dataset.pyx", line 3384, in pyarrow._dataset.Scanner._make_scan_options
+  File "pyarrow/_dataset.pyx", line 3318, in pyarrow._dataset._populate_builder
+  File "pyarrow/_compute.pyx", line 2697, in pyarrow._compute._bind
+  File "pyarrow/error.pxi", line 154, in pyarrow.lib.pyarrow_internal_check_status
+  File "pyarrow/error.pxi", line 91, in pyarrow.lib.check_status
+pyarrow.lib.ArrowTypeError: Array type doesn't match type of values set: string vs null
