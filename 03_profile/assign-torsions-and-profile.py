@@ -60,8 +60,8 @@ def batch_label_smiles(
 @click.option(
     "--input",
     "-i",
-    "input_directory",
-    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+    "input_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False),
     default="../02_fragment/combined",
     help="Directory containing input files",
 )

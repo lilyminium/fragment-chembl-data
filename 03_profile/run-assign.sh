@@ -30,8 +30,8 @@ export OE_LICENSE="/data/homezvol3/lilyw7/oe_license.txt"
 python assign-parameters-by-file.py                             \
         --n-workers                     300                     \
         --worker-type                   "slurm"                 \
-        --batch-size                    5                       \
-        --memory                        4                       \
+        --batch-size                    1                       \
+        --memory                        16                      \
         --walltime                      480                     \
         --queue                         "free"                  \
         --conda-environment             "openff-nagl-test"      \

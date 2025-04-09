@@ -1,5 +1,6 @@
 import multiprocessing
 import pathlib
+import logging
 import typing
 import click
 import tqdm
@@ -15,6 +16,12 @@ from openff.toolkit import Molecule, ForceField
 
 PARAMETER_TYPES = ["Bonds", "Angles", "ProperTorsions", "ImproperTorsions"]
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+
 def label_single_smiles(smiles: str, forcefield):
     mol = Molecule.from_smiles(
         smiles,
@@ -28,13 +35,14 @@ def label_single_smiles(smiles: str, forcefield):
             parameter.id
             for parameter in values.values()
         ]))
-        for parameter_id in parameter_ids:
-            entry = {
+        entries.extend([
+            {
                 "smiles": smiles,
                 "parameter_type": parameter_type,
                 "parameter_id": parameter_id
             }
-            entries.append(entry)
+            for parameter_id in parameter_ids
+        ])
     return entries
 
 
@@ -43,11 +51,16 @@ def label_single_file(
     output_directory: pathlib.Path,
     forcefield,
 ):
-    with open(input_file, "r") as f:
-        all_smiles = set([x.strip() for x in f.readlines()])
-    
     output_file = pathlib.Path(input_file).stem + ".parquet"
     output_path =  output_directory / output_file
+
+    if output_path.is_file():
+        return
+
+    with open(input_file, "r") as f:
+        all_smiles = set([x.strip() for x in f.readlines()])
+
+    logger.info(f"Loaded {len(all_smiles)} SMILES")
 
     entries = []
     for smiles in tqdm.tqdm(all_smiles):
@@ -63,7 +76,10 @@ def batch_label_files(
     forcefield_path: str,
     output_directory: str,
 ):
+
     forcefield = ForceField(forcefield_path)
+    for ignore in ["vdW"]:
+        forcefield.deregister_parameter_handler(ignore)
     output_directory = pathlib.Path(output_directory)
     for file_path in tqdm.tqdm(all_files):
         label_single_file(file_path, output_directory, forcefield)
@@ -159,7 +175,7 @@ def main(
     from dask import distributed
 
     input_directory = pathlib.Path(input_directory)
-    input_files = sorted(input_directory.glob("*"))[:200]
+    input_files = sorted(input_directory.glob("*"))[-1000:]
 
 
     print(f"Found {len(input_files)} files in {input_directory}")
