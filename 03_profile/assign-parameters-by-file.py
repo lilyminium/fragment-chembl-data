@@ -175,7 +175,7 @@ def main(
     from dask import distributed
 
     input_directory = pathlib.Path(input_directory)
-    input_files = sorted(input_directory.glob("*"))[-1000:]
+    input_files = sorted(input_directory.glob("*"))[-20000:]
 
 
     print(f"Found {len(input_files)} files in {input_directory}")

@@ -31,7 +31,7 @@ python assign-parameters-by-file.py                             \
         --n-workers                     300                     \
         --worker-type                   "slurm"                 \
         --batch-size                    1                       \
-        --memory                        16                      \
+        --memory                        4                       \
         --walltime                      480                     \
         --queue                         "free"                  \
         --conda-environment             "openff-nagl-test"      \
