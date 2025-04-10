@@ -1,8 +1,10 @@
 import click
 import logging
+import pathlib
 import tqdm
 
 import pyarrow as pa
+import pandas as pd
 import pyarrow.dataset as ds
 import pyarrow.compute as pc
 
@@ -44,11 +46,12 @@ def select_by_chemical_diversity(
         for rdmol in rdmols
     ]
     mmp = SimDivFilters.MaxMinPicker()
+    pick_size = min([n_parameter_pool, len(rdmols)])
     picked_indices = list(
         mmp.LazyBitVectorPick(
             fingerprints,
             poolSize=len(rdmols),
-            pickSize=n_parameter_pool,
+            pickSize=pick_size,
         )
     )
     return [smiles[i] for i in picked_indices]
@@ -65,32 +68,34 @@ def select_by_parameter_diversity(
 
     A li'l bit hacky.
     """
-    ff = ForceField("openff-2.2.1.offxml")
+    ff = ForceField("openff_unconstrained-2.2.1.offxml")
     all_other_parameters = []
     for smi in smiles:
-        mol = Molecule.from_smiles(smi)
+        mol = Molecule.from_smiles(smi, allow_undefined_stereo=True)
         labels = ff.label_molecules(mol.to_topology())[0]["ProperTorsions"]
         indices = [
             i for i, value in labels.items()
             if value.id == parameter_id
         ]
-        central_bond = sorted(indices[1:3])
+        central_bonds = set([tuple(sorted(ix[1:3])) for ix in indices])
         other_parameter_ids = set([
             value.id for i, value in labels.items()
-            if i[1:3] == central_bond
+            if tuple(sorted(i[1:3])) in central_bonds
         ])
         all_other_parameters.append(other_parameter_ids)
+    print(all_other_parameters)
 
     mmp = SimDivFilters.MaxMinPicker()
     dist_func = lambda i, j: parameter_tanimoto_distance(
         all_other_parameters[i],
         all_other_parameters[j],
     )
+    pick_size = min([n_parameters, len(smiles)])
     picked_indices = list(
         mmp.LazyPick(
             dist_func,
-            pool_size=len(smiles),
-            pick_size=n_parameters,
+            len(smiles), # pool size
+            pick_size, # pick size
         )
     )
     return [smiles[i] for i in picked_indices]
@@ -126,26 +131,47 @@ def main(
     csv_file="all-matching-low-torsions.csv",
     smiles_file="selected-torsion-molecules.smi",
     torsion_id: str = "t126",
-    n_pool: int = 100,
-    n_parameter_pool: int = 30,
+    n_pool: int = 1000,
+    n_parameter_pool: int = 100,
     n_output_parameters: int = 10,
 ):
-    dataset = ds.dataset(input_directory)
-    expression = pc.field("parameter_id") == torsion_id
-    torsion_subset = dataset.filter(expression)
-    smiles = set(
-        torsion_subset.to_table(columns=["smiles"]).to_pydict()["smiles"]
-    )
-    if "" in smiles:
-        smiles.remove("")
-
-    # initial sort for length and take first 5000
-    smiles = sorted(smiles, key=len)[:5000]
     
-    expression2 = pc.field("smiles").isin(smiles)
-    subset2 = torsion_subset.filter(expression2)
-    df = subset2.to_table(columns=["parameter_id", "smiles"]).to_pandas()
-    logger.info(f"Loaded {len(df)} rows from dataset")
+    csv_file = pathlib.Path(csv_file)
+    if not csv_file.is_file():
+
+        dataset = ds.dataset(input_directory)
+        expression = pc.field("parameter_id") == torsion_id
+        torsion_subset = dataset.filter(expression)
+        smiles = set(
+            torsion_subset.to_table(columns=["smiles"]).to_pydict()["smiles"]
+        )
+        if "" in smiles:
+            smiles.remove("")
+
+        # initial sort for length and take first 50000
+        smiles = sorted(smiles, key=len)[:50000]
+    
+        expression2 = pc.field("smiles").isin(smiles)
+        subset2 = torsion_subset.filter(expression2)
+        df = subset2.to_table(columns=["parameter_id", "smiles"]).to_pandas()
+        logger.info(f"Loaded {len(df)} rows from dataset")
+
+        mws = []
+
+        # this is also a filter for validation
+        for smi in tqdm.tqdm(df.smiles.values):
+            try:
+                mol = Molecule.from_smiles(smi, allow_undefined_stereo=True)
+            except:
+                mw = 1e6
+            else:
+                mw = sum([atom.mass for atom in mol.atoms]).m
+            mws.append(mw)
+
+        df["mw"] = mws
+
+        df.to_csv(csv_file)
+        logger.info(f"Raw dataset saved to {csv_file}")
 
     # <= 10 torsions in central bonds across all QCArchive
     # TORSION_IDS = [
@@ -179,19 +205,21 @@ def main(
     # logger.info(f"Loaded {len(df)} rows from dataset")
 
     # add mw
+
+    df = pd.read_csv(csv_file, index_col=0)
     mws = []
 
     # this is also a filter for validation
     for smi in tqdm.tqdm(df.smiles.values):
         try:
-            mol = Molecule.from_smiles(smi)
+            mol = Molecule.from_smiles(smi, allow_undefined_stereo=True)
         except:
             mw = 1e6
         else:
             mw = sum([atom.mass for atom in mol.atoms]).m
         mws.append(mw)
 
-    df["mw"] = mw
+    df["mw"] = mws
 
     df.to_csv(csv_file)
     logger.info(f"Raw dataset saved to {csv_file}")
