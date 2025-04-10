@@ -1,4 +1,7 @@
-import multiprocessing
+"""
+Label each SMILES in a file with the parameters from the force field.
+"""
+
 import pathlib
 import logging
 import typing
@@ -8,9 +11,7 @@ import tqdm
 from click_option_group import optgroup
 
 import pyarrow as pa
-import pyarrow.dataset as ds
 import pyarrow.parquet as pq
-import pyarrow.compute as pc
 
 from openff.toolkit import Molecule, ForceField
 
@@ -175,7 +176,7 @@ def main(
     from dask import distributed
 
     input_directory = pathlib.Path(input_directory)
-    input_files = sorted(input_directory.glob("*"))[-80000:-60000]
+    input_files = sorted(input_directory.glob("*"))[-80000:]
 
 
     print(f"Found {len(input_files)} files in {input_directory}")

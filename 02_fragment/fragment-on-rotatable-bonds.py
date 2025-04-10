@@ -1,13 +1,17 @@
-import logging
+"""
+Generate ChEMBL fragments using the following steps:
+1. Load in the input SMILES files
+2. Filter for only allowed elements; radicals; non-0 isotopes
+3. Fragment the molecules on rotatable bonds
+4. Write the fragments to a file
+"""
+
 import multiprocessing
 import pathlib
-import typing
-from collections import defaultdict
 
 import click
 
 from rdkit import Chem
-from rdkit.Chem import AllChem, Descriptors, Recap
 import tqdm
 
 
