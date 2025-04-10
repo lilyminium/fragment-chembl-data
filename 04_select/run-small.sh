@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #SBATCH -J select
-#SBATCH --array=0-36
+#SBATCH --array=6,15
 #SBATCH -p standard
 #SBATCH -t 16:00:00
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=32gb
+#SBATCH --mem=128gb
 #SBATCH --account dmobley_lab
 #SBATCH --output slurm-%x.%A-%a.out
 
@@ -56,6 +56,10 @@ TORSION_ID_ARRAY=(
     't154'
     't129'
     't30'
+    't59'
+    't60'
+    't61'
+    't62'
 )
 
 # Get the current index from the SLURM_ARRAY_TASK_ID environment variable

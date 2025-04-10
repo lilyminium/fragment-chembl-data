@@ -70,6 +70,7 @@ def select_by_parameter_diversity(
     """
     ff = ForceField("openff_unconstrained-2.2.1.offxml")
     all_other_parameters = []
+    unique_coupled_parameter_ids = set()
     for smi in smiles:
         mol = Molecule.from_smiles(smi, allow_undefined_stereo=True)
         labels = ff.label_molecules(mol.to_topology())[0]["ProperTorsions"]
@@ -83,7 +84,9 @@ def select_by_parameter_diversity(
             if tuple(sorted(i[1:3])) in central_bonds
         ])
         all_other_parameters.append(other_parameter_ids)
-    print(all_other_parameters)
+        unique_coupled_parameter_ids |= other_parameter_ids
+   
+    print(f"Unique coupled parameter ids: {unique_coupled_parameter_ids}")
 
     mmp = SimDivFilters.MaxMinPicker()
     dist_func = lambda i, j: parameter_tanimoto_distance(
@@ -133,8 +136,8 @@ def main(
     csv_file="all-matching-low-torsions.csv",
     smiles_file="selected-torsion-molecules.smi",
     torsion_id: str = "t126",
-    n_pool: int = 1000,
-    n_parameter_pool: int = 100,
+    n_pool: int = 5000,
+    n_parameter_pool: int = 250,
     n_output_parameters: int = 10,
 ):
     
@@ -149,6 +152,7 @@ def main(
         )
         if "" in smiles:
             smiles.remove("")
+        print(f"Found {len(smiles)} SMILES")
 
         # initial sort for length and take first 50000
         smiles = sorted(smiles, key=len)[:50000]
