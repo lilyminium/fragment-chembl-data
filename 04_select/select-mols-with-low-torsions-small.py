@@ -71,20 +71,39 @@ def select_by_parameter_diversity(
     ff = ForceField("openff_unconstrained-2.2.1.offxml")
     all_other_parameters = []
     unique_coupled_parameter_ids = set()
-    for smi in smiles:
+    ix_to_ignore = []
+    for i, smi in enumerate(smiles):
         mol = Molecule.from_smiles(smi, allow_undefined_stereo=True)
         labels = ff.label_molecules(mol.to_topology())[0]["ProperTorsions"]
         indices = [
             i for i, value in labels.items()
             if value.id == parameter_id
         ]
-        central_bonds = set([tuple(sorted(ix[1:3])) for ix in indices])
+        central_bonds = set()
+        for ix in indices:
+            # filter for being in ring
+            i, j = ix[1:3]
+            if not mol.get_bond_between(i, j).is_in_ring():
+                central_bonds.add(tuple(sorted([i, j])))
+        
+        if not central_bonds:
+            ix_to_ignore.append(i)
+            
         other_parameter_ids = set([
             value.id for i, value in labels.items()
             if tuple(sorted(i[1:3])) in central_bonds
         ])
         all_other_parameters.append(other_parameter_ids)
-        unique_coupled_parameter_ids |= other_parameter_ids
+
+        if central_bonds:
+            unique_coupled_parameter_ids |= other_parameter_ids
+    
+    # remove those without central bonds
+    smiles = [smi for i, smi in enumerate(smiles) if i not in ix_to_ignore]
+    all_other_parameters = [
+        all_other_parameters[i] for i in range(len(all_other_parameters))
+        if i not in ix_to_ignore
+    ]
    
     print(f"Unique coupled parameter ids: {unique_coupled_parameter_ids}")
 
