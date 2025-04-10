@@ -1,0 +1,10 @@
+BrCC1CC=NC1 t12
+CC(F)(F)Br t12
+CC(Cl)Br t12
+FC(F)C(F)Br t12
+BrCC1NC=CO1 t12
+CCBr t12
+[O-]CC(F)(F)Br t12
+FC(Cl)CBr t12
+OC1CCC1Br t12
+CC#CC(C)Br t12

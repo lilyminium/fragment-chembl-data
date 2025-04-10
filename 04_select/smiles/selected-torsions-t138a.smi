@@ -1,0 +1,10 @@
+[NH3+]N=c1ccocc1 t138a
+[H]C=N[N+]1([O-])CC1 t138a
+[NH-][NH3+] t138a
+N#C[N-][NH+]1C=CC=C1 t138a
+[NH3+]N=c1nncco1 t138a
+[NH-][NH+]1CC2CC1CN2 t138a
+[O-][NH2+][N-]Cl t138a
+N=C=N[NH+]1CCOC1 t138a
+FC=N[NH+]1C=CN=C1 t138a
+N#[N+][N-][NH3+] t138a

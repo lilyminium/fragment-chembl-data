@@ -1,0 +1,10 @@
+O=[SH2+]N=C1NN=CCS1 t89
+C#CSC1=N[SH]=NC=N1 t89
+[SH3]N=c1scns1 t89
+[SH3]N=C1NCCCS1 t89
+O=S([O-])N=c1occs1 t89
+C=[S+]C1=NS(=O)(=O)C=C1 t89
+N=[SH]N=c1ncss1 t89
+O=[SH2+]N=c1[nH]c(=O)[nH]s1 t89
+C=[SH+]([O-])N=C1N=CCS1 t89
+[H]/N=C1/NC(=N[SH](=N)=O)S1 t89

@@ -1,0 +1,10 @@
+O=S([O-])N=C1CC=CN1 t88
+[H]/N=C1/NC(=N[SH3])S1 t88
+[H]/C=C1\CNC(=N[SH]=N)N1 t88
+O=[N+]([O-])C1=N[SH]=NC=N1 t88
+[SH3]N=c1[nH]cco1 t88
+O=[SH2+]N=c1nn[nH][nH]1 t88
+N=[NH+]C1=NS(=O)(=O)C=C1 t88
+[O-][SH2]N=c1cccn[nH]1 t88
+O=[SH](=O)N=C1N=NCN1 t88
+C=[SH]N=c1[nH]oc(=O)[nH]1 t88
