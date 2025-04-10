@@ -69,6 +69,12 @@ def select_by_parameter_diversity(
     A li'l bit hacky.
     """
     ff = ForceField("openff_unconstrained-2.2.1.offxml")
+    handler = ff.get_parameter_handler("ProperTorsions")
+    parameter = handler.get_parameter({"id": parameter_id})[0]
+    #filter_for_ring = not("@" in parameter.smirks and not "!@" in parameter.smirks)
+    # filter blacklist -- these are ring torsions
+    ring_torsions = ["t141a", 
+
     all_other_parameters = []
     unique_coupled_parameter_ids = set()
     ix_to_ignore = []
@@ -76,22 +82,23 @@ def select_by_parameter_diversity(
         mol = Molecule.from_smiles(smi, allow_undefined_stereo=True)
         labels = ff.label_molecules(mol.to_topology())[0]["ProperTorsions"]
         indices = [
-            i for i, value in labels.items()
+            ix for ix, value in labels.items()
             if value.id == parameter_id
         ]
         central_bonds = set()
         for ix in indices:
             # filter for being in ring
-            i, j = ix[1:3]
-            if not mol.get_bond_between(i, j).is_in_ring():
-                central_bonds.add(tuple(sorted([i, j])))
+            j, k = ix[1:3]
+            if mol.get_bond_between(j, k).is_in_ring() and filter_for_ring:
+                continue
+            central_bonds.add(tuple(sorted([j, k])))
         
         if not central_bonds:
             ix_to_ignore.append(i)
             
         other_parameter_ids = set([
-            value.id for i, value in labels.items()
-            if tuple(sorted(i[1:3])) in central_bonds
+            value.id for ix, value in labels.items()
+            if tuple(sorted(ix[1:3])) in central_bonds
         ])
         all_other_parameters.append(other_parameter_ids)
 
@@ -104,6 +111,8 @@ def select_by_parameter_diversity(
         all_other_parameters[i] for i in range(len(all_other_parameters))
         if i not in ix_to_ignore
     ]
+    print(f"Picking from {len(smiles)} SMILES not in ring")
+    print(all_other_parameters)
    
     print(f"Unique coupled parameter ids: {unique_coupled_parameter_ids}")
 

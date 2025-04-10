@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH -J select
-#SBATCH --array=6,15
+#SBATCH --array=0-40
 #SBATCH -p standard
 #SBATCH -t 16:00:00
 #SBATCH --nodes=1
