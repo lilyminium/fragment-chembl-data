@@ -1,0 +1,10 @@
+N=[PH2]n1[nH]o1 b63
+FNN=[PH]=S b63
+CC1=N[PH2]=NC=N1 b63
+N#CC1(N=[PH3])C=C1 b63
+N#CC=C[PH](=N)[O-] b63
+[PH3]=N[NH+]1C=CN=C1 b63
+[H]/C=C/C#CON=[PH3] b63
+[PH3]=Nc1cc[nH]c1 b63
+[H]/C=C1\CNC1[PH2]=N b63
+O=S([O-])N=[PH3] b63
