@@ -140,9 +140,9 @@ def main(
     csv_file="all-matching-low-torsions.csv",
     smiles_file="selected-torsion-molecules.smi",
     parameter_id: str = "t126",
-    n_pool: int = 5000,
-    n_parameter_pool: int = 250,
-    n_output_parameters: int = 10,
+    n_pool: int = 10000,
+    n_parameter_pool: int = 500,
+    n_output_parameters: int = 50,
 ):
     
     csv_file = pathlib.Path(csv_file)
