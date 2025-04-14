@@ -139,7 +139,7 @@ def main(
     input_directory="../03_profile/ff-parameters",
     csv_file="all-matching-low-torsions.csv",
     smiles_file="selected-torsion-molecules.smi",
-    torsion_id: str = "t126",
+    parameter_id: str = "t126",
     n_pool: int = 5000,
     n_parameter_pool: int = 250,
     n_output_parameters: int = 10,
@@ -149,7 +149,7 @@ def main(
     if not csv_file.is_file():
 
         dataset = ds.dataset(input_directory)
-        expression = pc.field("parameter_id") == torsion_id
+        expression = pc.field("parameter_id") == parameter_id
         torsion_subset = dataset.filter(expression)
         smiles = set(
             torsion_subset.to_table(columns=["smiles"]).to_pydict()["smiles"]
@@ -199,12 +199,12 @@ def main(
     # now sort by parameter diversity
     parameter_smiles = select_by_parameter_diversity(
         parameter_smiles,
-        parameter_id=torsion_id,
+        parameter_id=parameter_id,
         n_parameters=n_output_parameters,
     )
     logger.info(f"Selected {len(parameter_smiles)} SMILES by parameter diversity")
     output_smiles = [
-        f"{smi} {torsion_id}"
+        f"{smi} {parameter_id}"
         for smi in parameter_smiles
     ]
 
